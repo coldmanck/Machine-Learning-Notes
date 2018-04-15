@@ -1,5 +1,90 @@
 \documentclass{article}
-\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{empheq}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{mathtools}
+\usepackage{url}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\title{\textbf{Lecture Note} \\
+		\large CS5339 Theory and Algorithm for Machine Learning}
+\author{Meng-Jiun Chiou \\ National University of Singapore \\ mengjiun.chiou@u.nus.edu}
+\date{}
+
 \begin{document}
-(Type your content here.)
+    \maketitle 
+    \section{Supervised Learning}
+    \subsection{Empirical Risk Minimization (ERM)}
+    The learner does not know $D$ and only have access to the training set $S$, a sample from $D$. For a predictor $h: X \rightarrow Y$, we can approximate the expected error by using the training set error
+    \begin{equation}
+    L_S(h) = \frac{|i \in {1,...,m}:h(x_i) \neq y_i|}{m}.
+    \end{equation}
+    It can be rewritten using the 0-1 loss
+    \begin{equation}
+    L_S(h) = \frac{\sum_{i=1}^m l_{0-1}(h, (x_i, y_i))}{m}.
+    \end{equation}
+    Training set error is often called the empirical error or empirical risk. Given a hypothesis class $H$, finding the hypothesis $h \in H$ that minimizes the empirical risk is a simple learning strategy, which is often called empirical risk minimization (ERM).
+    
+    
+    \subsection{Maximum Likelihood Estimation (MLE)}
+    Assume that the data distribution $P$ is known up to some parameter $h \in H$, MLE selects the $h$ that maximizes the probability of the data $S$ being observed:
+    \begin{equation}
+    h_{ML} = arg \max_{h\in H} P(S|h).
+    \end{equation}
+    For i.i.d. data $S = (z_1,...,z_m) \sim D^m$, this becomes:
+    \begin{equation}
+    h_{ML} = arg \max_{h \in H} \prod_{i=1}^m D(z_i | h).
+    \end{equation}
+    For supervised learning, $z_i = (x_i, y_i)$ and we have
+    \begin{align}
+    h_{ML} &= arg \max_{h \in H} \prod_{i=1}^m D(y_i | x_i, h) D(x_i) \\
+    	   &= arg \max_{h \in H} \prod_{i=1}^m D(y_i | x_i, h) \\
+           &= arg \max_{h \in H} \sum_{i=1}^m log D(y_i | x_i, h).
+    \end{align}
+    With an equivalent distribution can be found, empirical risk minmization (ERM) is equal to maximum likelihood when for loss function
+    \begin{equation}
+    l(h, (x,y)) = -\ln p(y|x,h).
+    \end{equation}
+    
+    \subsection{Classification Loss Functions}
+    For binary classification using $h(x) \in (-\infty , \infty)$, we often compose the output of our function $h(x)$ with the logistic (sigmoid) function to get a probability model 
+    \begin{align}
+    P(y=1|x,h) &= \frac{\exp(h(x))}{1 + \exp(h(x))} = \frac{1}{1+\exp(-h(x))} \\
+    P(y=-1|x,h) &= 1-\frac{\exp(h(x))}{1 + exp(h(x))} = \frac{1}{1 + \exp(h(x))}.
+    \end{align}
+    For $y \in \{1,-1\}$, can write $P(y|x,h) = \frac{1}{1+\exp(-yh(x))}.$ Therefore log loss can be written as
+    \begin{equation}
+    l_{\log}(h,(x,y)) = -\log P(y|h(x)) = \log(1+\exp (-yh(x))).
+    \end{equation}
+    When $h(x)$ is a linear function, this is often called \textit{logistic regression}. \\\\
+    For multi-class classification, 
+    \begin{equation}
+    P(y=k|x,h)=\frac{\exp(h_k(x))}{\sum_{i=1}^K \exp (h_i(x))}.
+    \end{equation}
+    When $h_i(x)$ is linear, it is often called \textit{multiclass logistic regression, softmax regression or maximum entropy classifier}.
+    
+    \subsection{Maximum A Posteriori Estimation (MAPE)}
+    Instead of maximizing the likelihood, MAP find the parameter that maximizes the posterior probability $P(h|D)$:
+    \begin{align}
+    h_{MAP} &= arg \max_{h \in H} P(h|D) \\
+    		&= arg \max_{h \in H} P(D|h)P(h) \\
+            &= arg \max_{h \in H} \prod_{i=1}^m D(z_i|h)P(h) \\
+            &= arg \max_{h \in H} \sum_{i=1}^m \Big( \log D(y_i|x_i, h) + \log P(h) \Big).
+    \end{align}
+    So balance between fitting the data (likelihood) and fitting the prior well. For example, we add an zero mean Gaussian prior on the weight vector $\lambda ||\textbf{w}||^2$ in loss function of linear regression. This is often called \textit{ridge regression} or penalized least square. Minimizing a combination of empirical risk and a regularizer is also called Regularized Risk Minimization (RRM).
+    
+    \subsection{Bayesian Estimation}
+    Instead of selecting a single $h$, we maintain the posterior distribution over the parameters $P(h|z_1,...,z_m)$. This can be used to make optimal prediction (assuming the prior is correct) for the variable of interest. For example, 
+    \begin{align}
+    P(y|x,z_1,...,z_m) &= \int_h P(y,h|x,z_1,...,z_m) \\
+    				   &= \int_h P(y|h,x,z_1,...,z_m) P(h|z_1,...,z_m).
+    \end{align}
+    
+    
+    \section{Unsupervised Learning}
+    
 \end{document}
