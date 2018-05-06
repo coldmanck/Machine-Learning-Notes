@@ -201,6 +201,7 @@
    \\\\
    To do dictionary learning, it is common to construct an autoencoder consisting of a function pair: an encoder $\varphi: \mathbb{R}^d \mapsto \mathbb{R}^k$ and  a decoder $\phi: \mathbb{R}^k \mapsto \mathbb{R}^d$. The goal of learning is to minimize the reconstruction error: $\sum_i || \textbf{x}_i - \phi(\varphi(\textbf{x}_i)) ||^2$. Principal Component Analysis (PCA) is an example where $k < d$.
    
+   \clearpage
    \section{Representation}
    Some interesting functions can be represented/approximated:
    \begin{itemize}
@@ -589,9 +590,277 @@
    \subsection{Ensemble Methods}
    Ensemble methods take a weighted average of outputs of learning algorithms. The most famous method is XGBoost \cite{DBLP:journals/corr/ChenG16}. XGBoost is a tree ensemble model (weighted average of trees).
    \\\\
-   We generalize ensembles into linear combinations with bounded $\ell_1$ norm and look at approximation results of the larger class. Consider $f(x)=\sum_{i=1}^{\infty} w_ig_i(x)$ where $w_i > 0$ and $\sum_{i=1}^{\infty} w_i = 1$. This describes an ensemble of functions. We can generalize it by allowing $w_i$ to also be negative and $\sum_{i=1}^{\infty} |w_i|=C$ for some constant C. We then call $C = \sum_{i=1}^{\infty} |w_i|$ the $\ell_1$ norm of the linear combination.
+   We generalize ensembles into linear combinations with bounded $\ell_1$ norm and look at approximation results of the larger class. Consider $f(\mathbf{x})=\sum_{i=1}^{\infty} w_ig_i(\mathbf{x})$ where $w_i > 0$ and $\sum_{i=1}^{\infty} w_i = 1$. This describes an ensemble of functions. We can generalize it by allowing $w_i$ to also be negative and $\sum_{i=1}^{\infty} |w_i|=C$ for some constant C. We then call $C = \sum_{i=1}^{\infty} |w_i|$ the $\ell_1$ norm of the linear combination.
    
+   \subsubsection{Approximation with Square Loss}
+   We denote $\ell_2$ distance as $||f-g||_2 = \sqrt{\int_K (f(\mathbf{x})-g(\mathbf{x}))^2 p(\mathbf{x}) d(\mathbf{x})}$. Let $f(\mathbf{x})=\sum_{i=1}^{\infty} w_ig_i(\mathbf{x})$, $C = \sum_{i=1}^{\infty} |w_i|$ and $G$ include all the functions $g_i$ used in $f$. Assume $||g_i|| \leq 1$. 
+   \\\\
+   \textbf{Theorem.} There is a $k$ term linear combination $f_k$ of functions from $G$ such that $||f-f_k||_2^2 \leq \frac{C^2}{k}$.
+   \begin{itemize}
+   \item The theorem shows the approximation error for $||f-f_k||$ decays at a rate $O(\frac{C}{\sqrt{k}})$. 
+   \item To get an approximation error $||f-f_k|| \leq \epsilon$, a relatively small number $k=O(\frac{C}{\sqrt{k}})$ of functions is required.
+   \end{itemize}
    
+   \subsubsection{Maximum Norm Approximation}
+   We now look at approximation using the maximum norm $||f||_\infty = \max_K |f(\mathbf{x})|$. (also called supremum norm, Chebyshev norm or infinity norm).
+   \\\\
+   \textbf{Hoeffding's Inequality}. Let $Z_1,...,Z_m$ be a sequence of $i.i.d.$ random variables and let $\bar{Z} = \frac{1}{m}\sum_{i=1}^m Z_i$. Assume that $E[\bar{Z}] = \mu$ and $Pr[a \leq Z_i \leq b] = 1$ for every $i$. Then for any $\epsilon > 0$,
+   \begin{equation}
+   Pr\Bigg[ \Bigg| \frac{1}{m}\sum_{i=1}^m Z_i - \mu \Bigg| > \epsilon \Bigg] \leq 2\exp\Bigg(\frac{-2m\epsilon^2}{(b-a)^2}\Bigg).
+   \end{equation}
+   \textbf{Union bound}.
+   \begin{equation}
+   Pr[A_1 \cup A_2,...,A_n] \leq Pr[A-1] + ... + Pr[A_n].
+   \end{equation}
+   Let $f(\mathbf{x})=\sum_{i=1}^{\infty} w_ig_i(\mathbf{x})$ and $C = \sum_{i=1}^{\infty} |w_i|$. Further assume $g_i$ has been normalized so that $\sup_{x\in K} |g_i(\mathbf{x})| = 1$, and G contains all the functions $g_i$ used in $f$. $\sup$ means least upper bound.
+   \\\\
+   \textbf{Theorem}. There is a $k$ term linear combination $f_k$ of functions in $G$ such that 
+   \begin{equation}
+   ||f-f_k||_\infty \leq \frac{(C+1)\sqrt{\log 2|\mathcal{X}|}}{\sqrt{8k}} = O \Bigg( \frac{C\sqrt{\log |\mathcal{X}|}}{\sqrt{k}} \Bigg).
+   \end{equation}
+   For the proof, refer to slide 13-14, \textit{Representation III}.
+   
+   \subsubsection{Using Ensemble for Classification}
+   \textbf{Corollary}. Consider a function $f(\mathbf{x})=\sum_{i=1}^{\infty} w_ig_i(\mathbf{x})$, assume $\max_{x\in K} |g_i(\mathbf{x})| = 1$ and let $\sum_i |w_i| = 1$. Assume $f$ correctly classifies all $x \in \mathcal{X}$ with margin $\gamma$. Then it is possible to correctly classify all the instances in $\mathcal{X}$ using a linear combination of $k$ terms from $\{ g_i | i=1,...,\infty \}$ for $k > k_{min} = \frac{\log(2|\mathcal{X}|)}{2\gamma^2}$.
+   \\\\
+   This corollary suggests that classifiers with large margins are easier to approximate.
+   
+   \subsubsection{Large Margin Classifier and Weak Learning}
+   \textbf{Definition of Weak Learning.} For $\gamma > 0$, an algorithm $A$ is called a $\gamma$-weak learning algorithm for a Boolean function $F$ if for any distribution $D$ over $\mathcal{X}$, the algorithm takes a set of examples from distribution $D$ as input and outputs a hypothesis $h \in \mathcal{H}$ with error at most $\frac{1}{2} - \gamma$, i.e. $Pr_D (h(x) \neq f(x)) \leq \frac{1}{2} - \gamma$.
+   \\\\
+   A weak learning algorithm is guaranteed to find a classifier that does slightly better than chance, regardless of the input distribution.
+   \\\\
+   Assume that the componenet functions $\{-1,1\}-valued$. 
+   \\\\
+   \textbf{Theorem.} There is a $\gamma$-weak learning algorithm using $\mathcal{H}$ if and only if there is an ensemble of functions from $\mathcal{H}$ with margin $2\gamma$.
+   
+   \subsubsection{Ensembles in Practice}
+   \begin{itemize}
+   \item Ensembles of decision trees are very successful in practive.
+   \begin{itemize}
+   \item Boosting methods (decrease bias) explicitly optimize the weights and examples used to learn each component tree.
+   \item Bagging methods (decreases variance) subsample the examples to get a diverse collection of trees and give equal weighting. It is targeted at variance reduction but may also result in improved approximation.
+   \end{itemize}
+   \item Appears to improve performance of trees making it competitive with other methods and yet scale quite well to large data sets.
+   \item Beside trees, can also be used with other methods.
+   \item Combining the output of various methods using ensembles often helps in practice, possibly for both variance reduction and improved approximation.
+   \end{itemize}
+   For detailed comparison, refer to the article on StackOverflow \cite{19053}.
+   
+   \subsection{Deep Neural Network}
+   \subsubsection{VC Dimension of Neural Networks}
+   We bound the number of functions that can be represented by a neural network with linear threshold units that has $|E|$ weights, and obtain a bound on the VC-dimension.
+   \\\\
+   \textbf{Theorem.} The VC-dimension of a neural networks with linear threshold units is $O(|E|\log|E|)$ where $|E|$ is the number of weights in the network.
+   \\\\
+   For the proof, refer to slide 31-34, \textit{Representation III}.
+   \\\\
+   Recall:
+   \begin{itemize}
+   \item \textbf{Definition}: a \textbf{dichotomy} of a set $S$ is a partition of $S$ into two disjoint subsets.
+   \item \textbf{Definition}: a set of instances $S$ is \textbf{shattered} by hypothesis space $H$ if and only of for every dichotomy of $S$ there exists some hypothesis in $H$ consistent with this dichotomy.
+   \item \textbf{Definition}: The \textbf{Vapnik-Chervonenkis dimension}, $VC(H)$, of hypothesis space $H$ defined over instance space $X$ is the size of the largest finite subset of $X$ shattered by $H$. If arbitrarily large finite sets of $X$ can be shattered by $H$, then $VC(H) = \infty.$
+   \end{itemize}
+   Using the bound on the VC-dimension, we can show that there are Boolean functions that requires an exponential sized neural network with linear threshold processubg units to represent, regardless of the architecture.
+   \\\\
+   \textbf{Theorem}. For every $d$, let $s(d)$ be the minimal integer such that there is a graph $(V,E)$ with $|V|=s(d)$ such that the hypothesis class $H_G$ with linear threshold processing units contains all functions from $\{0,1\}^d$ to $\{0,1\}$. Then $s(d)$ is exponential in $d$.
+   \\\\
+   On the other hand, any function that is computable in polynomial time also has a representation that is polynomial sized.
+   \\\\
+   \textbf{Theorem.} Let $T:\mathbb{N} \rightarrow \mathbb{N}$ and for every $N$, let $\mathcal{F}_n$ be the class of functions that can be implemented using a Turing machine using a runtime of at most $T(n)$. Then, there exists constants $b,c \in \mathbb{R}_+$ such that for any $n$ there is graph $G_n=(V_n, E_n)$ of size at most $cT(n)^2+b$ such that $H_{G_n} $with linear threshold processing units contains $F+n$.
+   
+   \subsubsection{Deep Vs Shallow}
+   \textbf{Theorem.} Every constant depth circuit with AND, OR, NOT gates for computing the PARITY function requires size exponential in $d$. 
+   \\\\
+   When logarithmic depth is allowed, PARITY can be represented in size polynomial in $d$. So for logic circuits, there are functions that can be represented compactly if depth is unrestricted but requires exponential size if depth is restricted.
+   
+   \subsubsection{CNN}
+   We have earlier seen that PARITY can be represented using a single hidden layer threshold network with $d+1$ hidden units -- no need depth. So does the same phenomenon affect networks used practically?
+   \begin{itemize}
+   \item Shallow network requires exponential size to realize the same function as some polynomial sized deep networks.
+   \end{itemize}
+   
+   \subsubsection{Deep Learning in Practice}
+   \begin{itemize}
+   \item Often useful when dataset is large
+   \item When the dataset is not very large, methods such as SVM or ensemble of decision trees may work better.
+   \item Often advantageous when there is structure in the data that we want to exploit. Can design architectures to take advantage of structure in the data.
+   \end{itemize}
+   
+   \subsection{Embedding Knowledge/Algorithms}
+   Polynomial time algorithm can be encoded in a polynomial sized network: can be helpful in encoding prior knowledge.
+   \\\\
+   Design heuristic:
+   \begin{itemize}
+   \item Design network architectures that encode knowledge about problem domain
+   \item Can then learn the parameters for the network discriminatively (aka end-to-end learning) to get a robust function that fits the data well.
+   \item Exploit both knowledge of problem as well as learning from data.
+   \end{itemize}
+   
+   \subsubsection{Properties of Convolutional Networks}
+   \begin{itemize}
+   \item Feature detector (based on convolution) that detects the same feature in different locations.
+   \item Same kernel at different locations utilize parameter tying -- reduce data required for learning. Local kernels for efficiency.
+   \item Approximate invariance to small translations and other transformations through pooling.
+   \item CNN is known to be depth efficient.
+   \end{itemize}
+   
+   \subsubsection{RNN}
+   Refer to slide 64, \textit{Representation III}.
+   
+   \subsubsection{Value Iteration Network}
+   Value iteration network encodes the value iteration process for Markov decision processes.
+   \begin{itemize}
+   \item Dynamic programming.
+   \item Essentially a generalization of Bellman-Ford shortest path algorithm. However, in MDP the transition from one state to another is noisy, unlike in shortest path problems.
+   \end{itemize}
+   \textbf{Definition.} A Markov decision process (MDP) is described by a tuple $\langle S, A, T, R \rangle$ where $S$ denotes the state space, $A$ denotes the action space, $T$ denotes the transition function $T:S\times A \times S \rightarrow \mathbb{R}$ and $R$ denotes the reward function $R:S\times A \rightarrow \mathbb{R}$. 
+   \\\\
+   A policy $\pi(s)$ prescribes the action to take in state $s$. The aim of the policy is to maximize the expected sum of (discounted) reward $V^\pi(s) = E^\pi[\sum_{t=0}^\infty \gamma^t R(s_t, a_t)|s_0=s]$ where $\gamma$ is the discount factor.
+   \begin{itemize}
+   \item A discount factor $\gamma < 1$ allows the sum to be finite when we sum to $\infty$.
+   \item We may also be interested in the finite horizon case where we sum from $t=0$ to $K$ and set $\gamma = 1$. e.g. in the case of deterministic shortest path, this would give the shortest path to reach the goal using $K$ edges.
+   \end{itemize}
+   Value iteration is a DP algorithm for computing the value/policy.
+   \begin{gather}
+   V_{t+1}(s) = \max_a Q_t(s,a), \ \text{where} \\
+   Q_t(s,a) = 
+   \begin{cases}
+   R(s,a) \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \text{if}\ t = 0 \\
+   R(s,a) + \gamma \sum_{s'} T(s',a,s)V_t(s') \ \ \text{otherwise}.
+   \end{cases}
+   \end{gather}
+   For application of value iteration for Bellman-Ford algorithm in graph, refer to slide 79-81, \textit{Representation III}.
+   
+   \clearpage
+   \section{Estimation}
+   In this part, we will study how much data is required to learn.
+   \subsection{Finite Class}
+   \textbf{Theorem.} Let $\mathbb{H}$ be a finite hypothesis class. Let $\delta \in (0,1)$ and $\epsilon > 0$, and let $m$ be an integer that satisfies 
+   \begin{equation}
+   m \geq \frac{log(|\mathcal{H}|/\delta)}{\epsilon}.
+   \end{equation}
+   Then for any labeling function $f$, and for any distribution $\mathcal{D}$ for which the realizablity assumption holds, with probability at least $1 - \delta$ over the choice of an i.i.d. sample $\mathcal{S}$ of size $m$, we have that for every empirical risk minimization hypothesis $h_\mathcal{S}$, it holds that 
+   \begin{equation}
+   L_{(D,f)}(h_\mathcal{S}) \leq \epsilon.
+   \end{equation}
+   
+   \subsection{PAC Learning}
+   We cannot require the model to make perfect prediction every time. Instead, we hope the event that deviation is less than $\epsilon$ happens with high probability. In other words, machine learning can produce a good model with high probability.
+   \\\\
+   \textbf{Definition (PAC Learnability).} A hypothesis class $\mathcal{H}$ is Probably Approximately Correct (PAC) learnable if there exists a function $m_\mathcal{H}(\epsilon,\delta)$ and a learning algorithm with the following property: For every $\epsilon,\delta \in (0,1)$,  for every distribution $\mathcal{D}$ over $\mathcal{X}$, and for every labeling function $f$, if the realizability assumption holds with respect to $\mathcal{H}, \mathcal{D}, f$ then when running the learning algorithm on $m \geq m_\mathcal{H}(\epsilon,\delta)$ i.i.d. examples generated by $\mathcal{D}$ and labeled by $f$, the algorithm returns a hypothesis $h$ such that, with probability at least $1-\delta$ (over the choice of examples), $L_{(\mathcal{D}, f)} (h) \leq \epsilon$.
+   \begin{itemize}
+   \item The accuracy parameter $\epsilon$ determines how far the classifier is allowed to be from optimal (approximately correct).
+   \item The confidence parameter $\delta$ indicates how likely the classifier is to meet the accuracy requirement (probably part of PAC).
+   \end{itemize}
+   
+   \subsubsection{sample Complexity}
+   The function $m_\mathcal{H} : (0,1)^2 \rightarrow \mathbb{R}$ determines the sample complexity of learning $\mathcal{H}$. Sample complexity is the minimum size sample needed to obtain the required results.
+   \\\\
+   \textbf{Corollary:} Every finite hypothesis class is PAC learnable with sample complexity
+   \begin{equation}
+   m_\mathcal{H}(\epsilon,\delta) \leq \Bigg\lceil \frac{log(|\mathcal{H}|/\delta)}{\epsilon} \Bigg\rceil.
+   \end{equation}
+   We can relax the definition of PAC learning in the following ways:
+   \begin{itemize}
+   \item Realizability assumption
+   \item Agnostic learning
+   \item Loss function
+   \end{itemize}
+   \textbf{Definition (Agnostic PAC Learnability for General Loss Functions).} A hypothesis class $\mathcal{H}$ is agnostic PAC learnable with respect to a set $\mathbb{Z}$ and a loss function $\ell : \mathcal{H} times \mathcal{Z} \rightarrow \mathbb{R}_+$, if there exists a function $m_\mathcal{H}(\epsilon,\delta)$ and a learning algorithm with the following property: For every $\epsilon,\delta \in (0,1)$,  for every distribution $\mathcal{D}$ over $\mathcal{Z}$, when running the learning algorithm on $m \geq m_\mathcal{H}(\epsilon,\delta)$ i.i.d. examples generated by $\mathcal{D}$, the algorithm returns $h \in \mathcal{H}$ such that, with probability at least $1-\delta$ (over the choice of $m$ training examples),
+   \begin{equation}
+   L_{\mathcal{D}} (h) \leq \min_{h'\in \mathcal{H}} L_\mathcal{D}(h') + \epsilon,
+   \end{equation}
+   where $L_{\mathcal{D}} (h) = E_{z \sim \mathbb{D}} [\ell(h,z)]$.
+   
+   \subsubsection{Error Decomposition}
+   Let $h_\mathcal{S}$ be a $ERM_\mathcal{H}$ hypothesis. By using agnostic learning, we can decompose the error into two components:
+   \begin{equation}
+   L_{\mathcal{D}} (h_\mathcal{S}) \leq  \epsilon_{app} + \epsilon_{est}.
+   \end{equation}
+   \begin{itemize}
+   \item The approximation error $\epsilon_{app} = \min_{h \in \mathcal{H}} L_\mathcal{D}(h)$ is the minimum risk achievable by hypotheses in the class. 
+   \item The estimation error $\epsilon_{est} \geq L_{\mathcal{D}} (h_\mathcal{S}) - \epsilon_{app}$ is an upper bound on the difference between the error achieved by the $ERM_\mathcal{H}$ predictor and the minimum risk achievable by hypotheses in the class.
+   \end{itemize}
+   
+   \subsection{Uniform Convergence}
+   Uniform convergence is a general tool for showing learnability, including agnostic learning.
+   \\\\
+   \textbf{Definition (}$\epsilon$\textbf{-representative sample)}. A training sample $\mathcal{S}$ is called $\epsilon$-representative (w.r.t. domain $\mathcal{Z}$, hypothesis class $\mathcal{H}$, loss function $\ell$ and distribution $\mathcal{D}$) if
+   \begin{equation}
+   \forall h \in H, |L_S(h)-L_D(h)| \leq \epsilon.
+   \end{equation}
+   \textbf{Definition (Uniform Convergence)}: We say that a hypothesis class $\mathcal{H}$ has the uniform convergence property (w.r.t. domain $\mathcal{Z}$ and loss function $\ell$) if there exists a function $m_\mathcal{H}^{UC}:(0,1)^2 \rightarrow \mathbb{N}$ such that for every $\epsilon, \delta \in (0,1)$ and every probability distribution $\mathcal{D}$ over $\mathcal{Z}$, if $\mathcal{S}$ is a sample of $m \geq m_\mathcal{H}^{UC}(\epsilon, \delta)$ examples drawn i.i.d. from $\mathcal{D}$, then with probability at least $1-\delta$, $\mathcal{S}$ is $\epsilon$-representative.
+   \\\\
+   In other words, We bound the difference between the training error and generalization error for all functions in $\mathcal{H}$.
+   \\\\
+   \textbf{Lemma.} Assume that training set $S$ is $\epsilon/2$-representative (w.r.t. domain $\mathcal{Z}$, hypothesis class $\mathcal{H}$, loss function $\ell$ and distribution $\mathcal{D}$). Then any output of $ERM_H(S)$ (empirical risk minimizer), namely, any $h_s \in \arg \min_{h\in H} L_S(h)$ satisfies
+   \begin{equation}
+   L_D(h_S) \leq \min_{h\in H} L_D(h) + \epsilon.
+   \end{equation}
+   
+   \subsection{No Free Lunch}
+   \textbf{Theorem (No-Free-Lunch).} Let $A$ be any learning algorithm for the task of binary classification with respect to the 0-1 loss over a domain $\mathcal{X}$. Let $m$ be any number smaller than $\frac{|\mathcal{X}|}{2}$, representing a training set size. Then there exists a distribution $D$ over $\mathcal{X} \times \{0,1\}$ such that:
+   \begin{itemize}
+   \item There exists a function $f:\mathcal{X} \rightarrow \{0,1\}$ with $L_D(f) = 0$.
+   \item With probability of at least $\frac{1}{7}$ over the choise of $\mathcal{S} \sim \mathcal{D}^m$ we have that $L_\mathcal{D}(A(S)) \geq \frac{1}{8}$.
+   \end{itemize}
+   Implication: For every learner, there exists a task on which it fails.
+   
+   \subsection{Fundamental Theorem}
+   \textbf{Theorem. (Fundamental Theorem)} Let $\mathcal{H}$ be hypothesis class of functions from a domain $\mathcal{X}$ to $\{0,1\}$ and let the loss function be the 0-1 loss. Then the following are equivalent:
+   \begin{itemize}
+   \item $\mathcal{H}$ has the uniform convergence property.
+   \item Any ERM rule is a successful agnostic PAC learner for $\mathcal{H}$.
+   \item $\mathcal{H}$ is agnostic PAC learnable.
+   \item $\mathcal{H}$ is PAC learnable.
+   \item Any ERM rule is a successful PAC learner for $\mathcal{H}$.
+   \item $\mathcal{H}$ has finite VC-dimension.
+   \end{itemize}
+   
+   \subsubsection{Rademacher Complexity}
+   The bounds we derived based on VC dimension were distribution independent. In some sense, distribution independence is a nice property because it guarantees the bounds to hold for any data distribution. On the other hand, the bounds may not be tight for some specific distributions that are more benign than the worst case. Furthermore, the concepts used in defining VC dimension apply only to binary classification, but we are often interested in generalization bounds for multiclass classification and regression as well. \textit{Rademacher complexity} is a more modern notion of complexity that is distribution dependent and defined for any class real-valued functions (not only discrete-valued functions).
+   \\\\
+   To simplify notation, we will compose our hypothesis class with the loss function. Denote
+   \begin{equation}
+   \mathcal{F} = \ell\ o\ \mathcal{H} = \{ z \rightarrow \ell(h,z):h \in \mathcal{H} \}.
+   \end{equation}
+   We will use the empirical and expected loss of $f \ in \mathcal{F}$:
+   \begin{equation}
+   L_D(f) = E_{z \sim \mathcal{D}}[f(z)], \ \ L_S(f) = \frac{1}{m} \sum_{i=1}^m f(z_i).
+   \end{equation}
+   Recall that we used the notion of representativeness when we studied uniform convergence: we have uniform convergence if the samples are $\epsilon$-representative with high probability for all distributions.
+   \\\\
+   For this section, it suffices to look at one-sided representativeness of $S$ with respect of $\mathcal{F}$ as 
+   \begin{equation}
+   \text{Rep}_\mathcal{D} (\mathcal{F}, \mathcal{S}) = \sup_{f \in \mathcal{F}} (L_D(f) - L_S(f)). 
+   \end{equation}
+   This means, if $S$ has good representativeness (small), then functions with small empirical risk will also have small expected risk. However, we do not know $ \mathcal{D}$ and would like to estimate or bound the representativeness error from data. Given $S$, one possible way to estimate its representativeness is by randomly splitting it into disjoint sets $S_1$ and $S_2$ and measuring
+   \begin{equation}
+   \frac{1}{m} \sup_{f \in \mathcal{F}} (m_1L_{S_1}(f) - m_2L_{S_2}(f)), 
+   \end{equation}
+   where $m_1$ and $m_2$ are the sizes of $S_1$ and $S_2$. Rademacher complexity averages the estimates over the random splits generated from $M$ coin tosses: heads goes into $S_1$ and tail into $S_2$.
+   \\\\
+   Let $\mathcal{F}\ o\ \mathcal{S}$ be the set of all possible evaluation of function $f\in \mathcal{F}$ on $\mathcal{S}$:
+   \begin{equation}
+   \mathcal{F}\ o\ \mathcal{S} = \{ (f(z_1),...,f(z_m)):f\in \mathcal{F} \}.
+   \end{equation}
+   The Rademacher complexity of $\mathcal{F}$ with respect to $\mathcal{S}$ is:
+   \begin{equation}
+   R(F\ o\ S) = E_{\sigma \sim \{\pm 1\}^m} \Bigg[ \sup_{f \in \mathcal{F}} \frac{1}{m} \sum_{i=1}^m \sigma_i f(z_i) \Bigg],
+   \end{equation}
+   where $\sigma_i$ are i.i.d. sampled with $P(\sigma_i = 1) = P(\sigma_i = -1) = -1/2.$ We can also define the Rademacher complexity of a set $A \in \mathbb{R}^m$ as
+   \begin{equation}
+   R(A) = E_\sigma \Bigg[ \sup_{a \in A} \frac{1}{m} \sum_{i=1}^m \sigma_i a_i \Bigg].
+   \end{equation}
+   It turns out that, on average, the Rademacher complexity can be use to upper bound the representativeness value. So small Rademacher complexity implies small representativeness value.
+   \\\\
+   Lemma:
+   \begin{equation}
+   E_{\mathcal{S}\sim \mathcal{D}^m} [\text{Rep}_\mathcal{D} (\mathcal{F}, \mathcal{S})] \leq 2 E_{\mathcal{S} \sim \mathcal{D}^m} R(F\ o\ S).
+   \end{equation}
+   
+   \clearpage
    \bibliographystyle{ieeetr}
    \bibliography{citations}
 \end{document}
