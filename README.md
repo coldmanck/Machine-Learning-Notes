@@ -1,5 +1,5 @@
 # Machine-Learning-Notes
-Draft of Machine Learning Notes for CS5339 Machine Learning at NUS.
+Draft of Machine Learning Notes for CS5339 Machine Learning at NUS. Note that this draft is still **incomplete** currently.
 
 ## Contents so far
 ### 1 Formulation
@@ -45,6 +45,29 @@ Draft of Machine Learning Notes for CS5339 Machine Learning at NUS.
 2.8.3 Representation as Linear Combination of Functions <br>
 2.8.4 Collaborative Filtering <br>
 #### 2.9 Ensemble Methods
+2.9.1 Approximation with Square Loss
+2.9.2 Maximum Norm Approximation
+2.9.3 Using Ensemble for Classification
+2.9.4 Large Margin Classifier and Weak Learning
+2.9.5 Ensembles in Practice
+#### 2.10 Deep Neural Network
+2.10.1 VC Dimension of Neural Networks
+2.10.2 Deep Vs Shallow
+2.10.3 CNN
+2.10.4 Deep Learning in Practice
+#### 2.11 Embedding Knowledge/Algorithms
+2.11.1 Properties of Convolutional Networks
+2.11.2 RNN
+2.11.3 Value Iteration Network
+### 3 Estimation
+#### 3.1 Finite Class
+#### 3.2 PAC Learning
+3.2.1 sample Complexity
+3.2.2 Error Decomposition
+#### 3.3 Uniform Convergence
+#### 3.4 No Free Lunch
+#### 3.5 Fundamental Theorem
+3.5.1 Rademacher Complexity
 
 ## Credit
 Most of the contents come from lecturer ([Prof Lee Wee Sun](https://www.comp.nus.edu.sg/~leews/))'s slides.
